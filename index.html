@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VERITY — AI Assistant</title>
+<meta name="description" content="Verity — a futuristic bilingual AI assistant powered by Groq" />
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+<!-- Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Animated background layers -->
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+<div class="bg-orb bg-orb-3"></div>
+<canvas id="particles"></canvas>
+<div class="scanline"></div>
+
+<div class="app" id="app">
+
+  <!-- ===== Sidebar / Header ===== -->
+  <header class="topbar glass">
+    <div class="brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-atom"></i>
+      </div>
+      <div class="brand-text">
+        <h1>VERITY</h1>
+        <span class="brand-sub">Neural Assistant</span>
+      </div>
+    </div>
+
+    <div class="topbar-controls">
+      <div class="select-wrap glass-soft" title="Choose AI Model">
+        <i class="fa-solid fa-microchip"></i>
+        <select id="modelSelect">
+          <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Versatile)</option>
+          <option value="llama-3.1-8b-instant">Llama 3.1 8B (Instant)</option>
+          <option value="llama3-70b-8192">Llama 3 70B</option>
+          <option value="gemma2-9b-it">Gemma2 9B</option>
+          <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+        </select>
+      </div>
+
+      <button id="langToggleBtn" class="icon-btn glass-soft" title="Toggle interface language">
+        <i class="fa-solid fa-language"></i>
+      </button>
+
+      <button id="ttsToggleBtn" class="icon-btn glass-soft active" title="Toggle voice output">
+        <i class="fa-solid fa-volume-high"></i>
+      </button>
+
+      <button id="downloadBtn" class="icon-btn glass-soft" title="Download conversation">
+        <i class="fa-solid fa-download"></i>
+      </button>
+
+      <button id="clearBtn" class="icon-btn glass-soft danger" title="Clear chat">
+        <i class="fa-solid fa-trash"></i>
+      </button>
+
+      <button id="settingsBtn" class="icon-btn glass-soft" title="API Settings">
+        <i class="fa-solid fa-key"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== Main layout ===== -->
+  <main class="main">
+
+    <!-- Floating avatar column -->
+    <section class="avatar-panel glass">
+      <div class="avatar-stage">
+        <div class="avatar-ring ring-1"></div>
+        <div class="avatar-ring ring-2"></div>
+        <div class="avatar-ring ring-3"></div>
+        <div class="avatar-core" id="avatarCore">
+          <div class="avatar-face">
+            <div class="eye eye-l"></div>
+            <div class="eye eye-r"></div>
+            <div class="mouth" id="avatarMouth"></div>
+          </div>
+        </div>
+        <svg class="avatar-wave" id="avatarWave" viewBox="0 0 200 60" preserveAspectRatio="none">
+          <path id="wavePath" d="M0,30 Q50,30 100,30 T200,30" />
+        </svg>
+      </div>
+      <div class="avatar-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Online — Ready</span>
+      </div>
+      <div class="avatar-meta">
+        <p id="avatarHint">Tap the mic or type a message to begin</p>
+      </div>
+    </section>
+
+    <!-- Chat column -->
+    <section class="chat-panel glass">
+      <div class="chat-window" id="chatWindow">
+        <!-- messages injected here -->
+      </div>
+
+      <div class="typing-indicator" id="typingIndicator" hidden>
+        <span></span><span></span><span></span>
+      </div>
+
+      <form class="input-bar glass-soft" id="inputForm">
+        <button type="button" class="mic-btn" id="micBtn" title="Voice input">
+          <i class="fa-solid fa-microphone"></i>
+          <span class="mic-pulse"></span>
+        </button>
+
+        <textarea
+          id="userInput"
+          rows="1"
+          dir="auto"
+          placeholder="Type your message… اكتب رسالتك"
+          autocomplete="off"
+        ></textarea>
+
+        <button type="button" id="voiceLangBtn" class="hint-btn active-hint" title="Voice input language: Auto">
+          <i class="fa-solid fa-globe"></i>
+          <span class="voice-lang-badge" id="voiceLangBadge">AUTO</span>
+        </button>
+
+        <button type="submit" class="send-btn" id="sendBtn" title="Send">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </form>
+    </section>
+  </main>
+</div>
+
+<!-- Settings modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2><i class="fa-solid fa-key"></i> Groq API Settings</h2>
+      <button class="icon-btn" id="closeSettings"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-note">
+        Enter your free Groq API key. Get one instantly at
+        <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>.
+        The key is stored only in your browser (localStorage), or set it directly in <code>script.js</code>.
+      </p>
+      <label for="apiKeyInput">API Key</label>
+      <input type="password" id="apiKeyInput" placeholder="gsk_************************" />
+      <div class="modal-actions">
+        <button id="saveApiKeyBtn" class="primary-btn"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+        <button id="removeApiKeyBtn" class="ghost-btn"><i class="fa-solid fa-trash"></i> Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
